@@ -3,26 +3,55 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Yimu · 一目订阅 测试版</title>
 <style>
-:root{--bg:#f2f2f7;--card:#fff;--text:#1c1c1e;--sub:#6c6c70;--brand:#e5482f}
+:root{--bg:#f2f2f7;--card:#fff;--text:#1c1c1e;--sub:#6c6c70;--brand:#e5482f;--done:#34a853}
 @media (prefers-color-scheme:dark){:root{--bg:#000;--card:#1c1c1e;--text:#f2f2f7;--sub:#98989f;--brand:#ff7a63}}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 -apple-system,"PingFang SC","Noto Sans SC",sans-serif}
-main{max-width:480px;margin:0 auto;padding:40px 16px 56px;text-align:center}
+main{max-width:440px;margin:0 auto;padding:48px 16px 56px;text-align:center}
 .logo{width:88px;height:88px;border-radius:22px;background:var(--brand);display:inline-flex;align-items:center;justify-content:center}
 .logo svg{width:60px;height:60px}
-h1{font-size:26px;margin:16px 0 4px}.tag{color:var(--sub);margin:0 0 28px}
-.step{background:var(--card);border-radius:16px;padding:18px 16px;margin:12px 0;text-align:left}
-.step b{color:var(--brand)}.step p{margin:4px 0 12px;color:var(--sub);font-size:14px}
-a.btn{display:block;text-align:center;background:var(--brand);color:#fff;text-decoration:none;border-radius:12px;padding:12px;font-weight:600}
-.note{color:var(--sub);font-size:13px;margin-top:24px}
+h1{font-size:26px;margin:16px 0 4px}.tag{color:var(--sub);margin:0 0 32px}
+a.btn{display:block;background:var(--brand);color:#fff;text-decoration:none;border-radius:14px;padding:16px;font-weight:600;font-size:18px}
+.steps{display:flex;justify-content:center;gap:8px;margin:20px 0 8px;color:var(--sub);font-size:14px}
+.steps span{display:flex;align-items:center;gap:6px}
+.dot{width:20px;height:20px;border-radius:50%;background:var(--card);border:1.5px solid var(--sub);font-size:12px;line-height:18px}
+.on .dot{border-color:var(--brand);color:var(--brand)}.ok .dot{background:var(--done);border-color:var(--done);color:#fff}
+.hint{color:var(--sub);font-size:14px;margin:12px 0 0}
+.skip{display:inline-block;margin-top:20px;color:var(--brand);font-size:14px}
+.note{color:var(--sub);font-size:13px;margin-top:32px}
 </style></head><body><main>
 <div class="logo"><svg viewBox="0 0 100 100"><circle cx="50" cy="52" r="30" fill="none" stroke="#fff" stroke-width="11" stroke-dasharray="160 30" transform="rotate(-60 50 52)"/><circle cx="50" cy="52" r="10" fill="#fff"/></svg></div>
 <h1>Yimu · 一目订阅</h1>
 <p class="tag">Android 测试版 · Android beta</p>
-<div class="step"><b>1</b> 加入测试群组 · Join the tester group
-<p>用你在 Google Play 上登录的 Google 账号，点「加入群组」。<br>Use the Google account you use on Google Play and tap "Join group".</p>
-<a class="btn" href="https://groups.google.com/g/yimu-testers">加入群组 · Join group</a></div>
-<div class="step"><b>2</b> 成为测试者并安装 · Become a tester and install
-<p>点「成为测试者」，再点「在 Google Play 上下载」。<br>Tap "Become a tester", then "Download it on Google Play".</p>
-<a class="btn" href="https://play.google.com/apps/testing/com.submanager.sub_manager">成为测试者 · Join the test</a></div>
-<p class="note">测试版内购用测试卡支付，不会扣钱。<br>In-app purchases in the beta use a test card and are never charged.</p>
-</main></body></html>
+<a id="go" class="btn" href="#"></a>
+<p id="hint" class="hint"></p>
+<div class="steps"><span id="s1"><i class="dot">1</i>加入 · Join</span><span>→</span><span id="s2"><i class="dot">2</i>安装 · Install</span></div>
+<a id="skip" class="skip" href="#">已经加入过？直接安装 · Already joined? Install</a>
+<p class="note">请用手机上登录 Google Play 的同一个 Google 账号。<br>Use the same Google account as on Google Play.<br><br>测试版内购用测试卡支付，不会扣钱。<br>In-app purchases in the beta use a test card and are never charged.</p>
+</main>
+<script>
+// 一个按钮走完两步：先进测试群组，回来后同一个按钮变成「安装」。
+// One button for both steps: join the tester group first; when the user comes back it turns into "Install".
+const GROUP = 'https://groups.google.com/g/yimu-testers';
+const TEST = 'https://play.google.com/apps/testing/com.submanager.sub_manager';
+const KEY = 'yimu-joined';
+const go = document.getElementById('go'), hint = document.getElementById('hint');
+const s1 = document.getElementById('s1'), s2 = document.getElementById('s2'), skip = document.getElementById('skip');
+const joined = () => { try { return localStorage.getItem(KEY) === '1'; } catch (e) { return false; } };
+const setJoined = () => { try { localStorage.setItem(KEY, '1'); } catch (e) {} };
+const render = () => {
+  if (joined()) {
+    go.textContent = '安装测试版 · Install the beta'; go.href = TEST; go.removeAttribute('target');
+    hint.textContent = '点「成为测试者」，再点「在 Google Play 上下载」。Tap "Become a tester", then "Download it on Google Play".';
+    s1.className = 'ok'; s2.className = 'on'; skip.style.display = 'none';
+  } else {
+    go.textContent = '加入测试 · Join the beta'; go.href = GROUP; go.target = '_blank';
+    hint.textContent = '在打开的页面点「加入群组」，然后回到这里。Tap "Join group" on the page that opens, then come back here.';
+    s1.className = 'on'; s2.className = ''; skip.style.display = '';
+  }
+};
+go.addEventListener('click', () => { if (!joined()) { setJoined(); setTimeout(render, 300); } });
+skip.addEventListener('click', (e) => { e.preventDefault(); setJoined(); render(); location.href = TEST; });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+render();
+</script>
+</body></html>
